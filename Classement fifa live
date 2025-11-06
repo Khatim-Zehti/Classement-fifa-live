@@ -1,0 +1,140 @@
+<!doctype html>
+
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>حساب نقاط الفيفا المباشرة — مجاني</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Naskh Arabic',Arial;direction:rtl;padding:18px;background:#f6f8fa}
+    h1{font-size:1.6rem;margin-bottom:6px}
+    .card{background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(20,30,50,0.06);padding:14px;margin-bottom:12px}
+    label{display:block;margin-top:8px;font-size:0.9rem}
+    input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
+    button{margin-top:10px;padding:10px 12px;border-radius:10px;border:0;background:#0b74ff;color:#fff;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:center}
+    .small{font-size:0.85rem;color:#555}
+  </style>
+</head>
+<body>
+  <h1>موقع بسيط: تصنيف الفيفا المباشر (حساب نقاط بعد كل مباراة)</h1>
+  <div class="card">
+    <div class="small">تذكير: الحساب مبني على نموذج Elo اللي اعتمداتو FIFA منذ 2018: <em>P_new = P_old + I × (W - W_e)</em>. المصدر مذكور تحت.</div>
+  </div>  <div class="card">
+    <h2>1) جدول المنتخبات (أضف/حذف/تعديل النقاط الحالية)</h2>
+    <label>اسم المنتخب</label>
+    <input id="teamName" placeholder="مثال: Morocco" />
+    <label>النقاط الحالية</label>
+    <input id="teamPoints" type="number" value="1500" />
+    <button id="addTeam">أضف المنتخب</button><table id="teamsTable">
+  <thead><tr><th>#</th><th>المنتخب</th><th>نقاط</th><th>إجراءات</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+  </div>  <div class="card">
+    <h2>2) سجل مباراة وطبق التغيير فورياً</h2>
+    <label>المنتخب 1</label>
+    <select id="teamA"></select>
+    <label>المنتخب 2</label>
+    <select id="teamB"></select>
+    <label>نوع المباراة (أهمية I)</label>
+    <select id="importance">
+      <option value="5">ودية خارج نافذة الفيفا (I=5)</option>
+      <option value="10">ودية داخل نافذة الفيفا (I=10)</option>
+      <option value="15">دوري الأمم (مجموعات) (I=15)</option>
+      <option value="25">تصفيات / دوري أمم (play-offs) / مؤهلات (I=25)</option>
+      <option value="35">دور نهائي قبل ربع النهائي (I=35)</option>
+      <option value="40">ربع نهائي و نصفي و مباراة المركز الثالث و النهائي (I=40)</option>
+      <option value="50">مباريات كأس العالم قبل ربع النهائي (I=50)</option>
+      <option value="60">ربع نهائي و نصف النهائي و النهائي كأس العالم (I=60)</option>
+    </select><label>النتيجة</label>
+<select id="result">
+  <option value="1">المنتخب 1 فاز</option>
+  <option value="0.5">تعادل</option>
+  <option value="0">المنتخب 1 خسر</option>
+</select>
+
+<button id="applyMatch">احسب وطّبق النتيجة</button>
+
+<div id="matchResult" class="small"></div>
+
+  </div>  <div class="card">
+    <h2>3) جدول الترتيب (مرتّب حسب النقاط)</h2>
+    <table id="ranking"><thead><tr><th>النقطة</th><th>المنتخب</th></tr></thead><tbody></tbody></table>
+  </div>  <div class="card small">
+    مصادر: صفحة FIFA الرسمية للوصف وشرح المعاملات، وويكيبيديا للتوضيح. (Elo-based method: P_new = P_old + I*(W - W_e)).
+  </div><script>
+// بيانات داخل المتصفح (يمكن تصدير لاحقاً)
+let teams = [];
+function refreshTeamsUI(){
+  const tbody = document.querySelector('#teamsTable tbody'); tbody.innerHTML='';
+  const selA = document.getElementById('teamA'); const selB = document.getElementById('teamB'); selA.innerHTML=''; selB.innerHTML='';
+  teams.forEach((t,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.points.toFixed(2)}</td><td><button data-i='${i}' class='del'>حذف</button></td>`;
+    tbody.appendChild(tr);
+    const opt = document.createElement('option'); opt.value = i; opt.textContent = t.name; selA.appendChild(opt.cloneNode(true)); selB.appendChild(opt.cloneNode(true));
+  });
+  document.querySelectorAll('.del').forEach(b=>b.onclick=(e)=>{ const i=+b.dataset.i; teams.splice(i,1); refreshTeamsUI(); refreshRanking(); });
+}
+
+function refreshRanking(){
+  const tb = document.querySelector('#ranking tbody'); tb.innerHTML='';
+  const copy = teams.slice().sort((a,b)=>b.points - a.points);
+  copy.forEach(t=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${t.points.toFixed(2)}</td><td>${t.name}</td>`; tb.appendChild(tr); });
+}
+
+// إضافة منتخب
+document.getElementById('addTeam').onclick = ()=>{
+  const name = document.getElementById('teamName').value.trim();
+  const pts = parseFloat(document.getElementById('teamPoints').value) || 1500;
+  if(!name) return alert('عطينا اسم المنتخب');
+  teams.push({name, points: pts});
+  document.getElementById('teamName').value='';
+  refreshTeamsUI(); refreshRanking();
+}
+
+// حساب التوقع W_e
+function expectedScore(pA, pB){
+  // dr = P_b - P_a
+  const dr = pB - pA;
+  return 1 / (1 + Math.pow(10, dr/600));
+}
+
+// تنفيذ مباراة
+document.getElementById('applyMatch').onclick = ()=>{
+  const idxA = parseInt(document.getElementById('teamA').value);
+  const idxB = parseInt(document.getElementById('teamB').value);
+  if(isNaN(idxA) || isNaN(idxB) || idxA===idxB) return alert('خصك تختار منتخبين مختلفين');
+  const I = parseFloat(document.getElementById('importance').value);
+  const W = parseFloat(document.getElementById('result').value);
+
+  const teamA = teams[idxA]; const teamB = teams[idxB];
+  const WeA = expectedScore(teamA.points, teamB.points);
+  const WeB = expectedScore(teamB.points, teamA.points);
+
+  const newA = teamA.points + I*(W - WeA);
+  // For team B, result is complementary: if A gets W, then B gets (1-W) for win/loss and 0.5 for draw
+  const resultB = 1 - W;
+  const newB = teamB.points + I*(resultB - WeB);
+
+  // تحديث
+  const deltaA = newA - teamA.points; const deltaB = newB - teamB.points;
+  teamA.points = newA; teamB.points = newB;
+  refreshTeamsUI(); refreshRanking();
+
+  document.getElementById('matchResult').innerHTML = `تم التغيير:<br>${teamA.name}: ${deltaA.toFixed(2)} نقاط &nbsp; | &nbsp; ${teamB.name}: ${deltaB.toFixed(2)} نقاط`;
+}
+
+// مثال: شوية فرق مبدئية
+teams = [
+  {name:'Morocco', points:1600},
+  {name:'France', points:1750},
+  {name:'Brazil', points:1780},
+  {name:'Japan', points:1520}
+];
+refreshTeamsUI(); refreshRanking();
+
+</script></body>
+</html>
