@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>تصنيف الفيفا المباشر — صفحة واحدة</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#0b74ff;--glass:rgba(255,255,255,0.03)}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Naskh Arabic',Arial;background:linear-gradient(180deg,#071021 0%, #07162a 100%);color:#e6eef6;padding:18px;box-sizing:border-box}
+    h1{font-size:1.4rem;margin:0 0 10px}
+    .wrap{max-width:980px;margin:0 auto}
+    .card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    label{display:block;margin-top:8px;color:var(--muted);font-size:0.95rem}
+    input,select,button{font-size:0.95rem;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    input::placeholder{color:rgba(255,255,255,0.35)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .col{flex:1 1 180px;min-width:120px}
+    button.primary{background:var(--accent);border:0;color:white;padding:9px 12px;cursor:pointer;border-radius:10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:center}
+    th{color:var(--muted);font-weight:600;font-size:0.95rem}
+    td .flag{font-size:1.5rem}
+    .small{font-size:0.85rem;color:var(--muted)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .right{margin-left:auto}
+    .danger{background:#c0392b}
+    .success{background:#16a34a}
+    .export{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:7px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+    footer{margin-top:18px;color:var(--muted);font-size:0.82rem;text-align:center}
+    @media (max-width:680px){.row{flex-direction:column}.col{min-width:unset}th,td{font-size:0.85rem}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>تصنيف الفيفا المباشر — صفحة واحدة</h1>
+    <div class="card small">هذا التطبيق يحسب تحديث نقاط التصنيف بضبط حسب صيغة الElo اللي تستعملها FIFA: <code>P_new = P_old + I × (W - W_e)</code>. البيانات تخزّن محلياً فالمتصفح.</div>
+
+    <div class="card" id="teamsCard">
+      <h2>1) إضافة منتخب</h2>
+      <div class="row">
+        <div class="col">
+          <label>العلم (إيموجي) — مثال: 🇲🇦 یا 🇫🇷</label>
+          <input id="inpFlag" placeholder="مثال: 🇲🇦" />
+        </div>
+        <div class="col">
+          <label>اسم المنتخب</label>
+          <input id="inpName" placeholder="مثال: Morocco - المغرب" />
+        </div>
+        <div class="col">
+          <label>النقاط الحالية</label>
+          <input id="inpPoints" type="number" value="1500" />
+        </div>
+        <div style="align-self:end">
+          <button class="primary" id="addTeamBtn">أضف المنتخب</button>
+        </div>
+      </div>
+
+      <table id="teamsTable" style="margin-top:12px">
+        <thead><tr><th>#</th><th>علم</th><th>المنتخب</th><th>نقاط</th><th>إجراءات</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="small" style="margin-top:8px">ملاحظة: يمكنك تعديل أو حذف أي منتخب. البيانات محفوظة محلياً.</div>
+    </div>
+
+    <div class="card" id="matchCard">
+      <h2>2) سجل مباراة (وتطبيق التغيير فوراً)</h2>
+      <div class="row">
+        <div class="col">
+          <label>المنتخب</label>
+          <select id="selA"></select>
+        </div>
+        <div class="col">
+          <label>مقابل</label>
+          <select id="selB"></select>
+        </div>
+        <div class="col">
+          <label>نوع المباراة (I)</label>
+          <select id="selI">
+            <option value="5">ودية خارج نافذة الفيفا (I=5)</option>
+            <option value="10">ودية داخل نافذة الفيفا (I=10)</option>
+            <option value="15">دوري الأمم (مجموعات) (I=15)</option>
+            <option value="25">تصفيات / Play-offs / مؤهلات (I=25)</option>
+            <option value="35">قبل ربع النهائي (I=35)</option>
+            <option value="40">ربع/نصف/مباراة المركز الثالث/النهائي (I=40)</option>
+            <option value="50">مباريات كأس العالم قبل ربع النهائي (I=50)</option>
+            <option value="60">ربع/نصف/نهائي كأس العالم (I=60)</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>النتيجة</label>
+          <select id="selRes">
+            <option value="1">المنتخب الأول فاز</option>
+            <option value="0.5">تعادل</option>
+            <option value="0">المنتخب الأول خسر</option>
+          </select>
+        </div>
+        <div style="align-self:end">
+          <button class="primary" id="applyMatchBtn">احسب وطبّق</button>
+        </div>
+      </div>
+      <div id="matchInfo" class="small" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <h2>3) الترتيب الحالي</h2>
+        <div class="right">
+          <button class="export" id="exportCSV">تصدير CSV</button>
+          <button class="export" id="importCSVBtn">استيراد CSV</button>
+          <input type="file" id="importFile" style="display:none" accept=".csv,text/csv" />
+          <button class="export" id="resetBtn">إفراغ الكل</button>
+        </div>
+      </div>
+
+      <table id="ranking">
+        <thead><tr><th>الرتبة</th><th>علم</th><th>المنتخب</th><th>نقاط</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <footer class="small">مصنوع لك — تصنيف الفيفا المباشر • يحفظ بياناتك محلياً. في حالة رغبت بمزامنة سحابيّة نقدر نرّبطه بـ GitHub أو Google Sheets لاحقاً.</footer>
+  </div>
+
+<script>
+// ===== بيانات وتخزين محلي =====
+const STORAGE_KEY = 'fifa_live_teams_v1';
+let teams = [];
+
+// تحميل من localStorage
+function loadTeams(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    teams = raw ? JSON.parse(raw) : [];
+  }catch(e){ teams = []; }
+}
+function saveTeams(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(teams)); }
+
+// إضافة فريق
+document.getElementById('addTeamBtn').onclick = ()=>{
+  const flag = document.getElementById('inpFlag').value.trim() || '';
+  const name = document.getElementById('inpName').value.trim();
+  let pts = parseFloat(document.getElementById('inpPoints').value);
+  if(!name){ alert('عطينا اسم المنتخب'); return; }
+  if(isNaN(pts)) pts = 1500;
+  teams.push({id:Date.now(), flag, name, points: pts});
+  saveTeams(); renderAll();
+  document.getElementById('inpFlag').value=''; document.getElementById('inpName').value=''; document.getElementById('inpPoints').value='1500';
+}
+
+// رندر جدول المنتخبات والاختيارات
+function renderTeamsTable(){
+  const tbody = document.querySelector('#teamsTable tbody'); tbody.innerHTML='';
+  const selA = document.getElementById('selA'); const selB = document.getElementById('selB'); selA.innerHTML=''; selB.innerHTML='';
+  teams.forEach((t,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td class="flag">${t.flag||''}</td><td style="text-align:left;padding-left:12px">${t.name}</td><td>${t.points.toFixed(2)}</td>
+      <td><button data-id="${t.id}" class="editBtn">تعديل</button> <button data-id="${t.id}" class="delBtn danger">حذف</button></td>`;
+    tbody.appendChild(tr);
+    const optA = document.createElement('option'); optA.value = t.id; optA.textContent = t.name; selA.appendChild(optA);
+    const optB = optA.cloneNode(true); selB.appendChild(optB);
+  });
+  document.querySelectorAll('.delBtn').forEach(b=>b.onclick = (e)=>{ const id=+b.dataset.id; teams = teams.filter(x=>x.id!==id); saveTeams(); renderAll(); });
+  document.querySelectorAll('.editBtn').forEach(b=>b.onclick = (e)=>{
+    const id = +b.dataset.id; const team = teams.find(x=>x.id===id);
+    const newName = prompt('اسم المنتخب:', team.name); if(newName===null) return;
+    const newFlag = prompt('العلم (إيموجي):', team.flag||'') ;
+    const newPts = prompt('النقاط:', team.points.toFixed(2));
+    if(newName) team.name = newName; if(newFlag!==null) team.flag = newFlag;
+    const np = parseFloat(newPts); if(!isNaN(np)) team.points = np;
+    saveTeams(); renderAll();
+  });
+}
+
+// ترتيب وعرض التصنيف
+function renderRanking(){
+  const tb = document.querySelector('#ranking tbody'); tb.innerHTML='';
+  const copy = teams.slice().sort((a,b)=>b.points - a.points);
+  copy.forEach((t,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td class="flag">${t.flag||''}</td><td style="text-align:left;padding-left:12px">${t.name}</td><td>${t.points.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// رندر شامل
+function renderAll(){ renderTeamsTable(); renderRanking(); updateURLInfo(); saveTeams(); }
+
+// ===== حساب Elo (طريقة FIFA) =====
+function expectedScore(pA, pB){
+  const dr = pB - pA;
+  return 1 / (1 + Math.pow(10, dr/600));
+}
+
+document.getElementById('applyMatchBtn').onclick = ()=>{
+  const idA = +document.getElementById('selA').value;
+  const idB = +document.getElementById('selB').value;
+  if(!idA || !idB || idA===idB){ alert('اختار منتخبين مختلفين'); return; }
+  const teamA = teams.find(t=>t.id===idA);
+  const teamB = teams.find(t=>t.id===idB);
+  const I = parseFloat(document.getElementById('selI').value);
+  const W = parseFloat(document.getElementById('selRes').value);
+
+  const WeA = expectedScore(teamA.points, teamB.points);
+  const WeB = expectedScore(teamB.points, teamA.points);
+
+  const newA = teamA.points + I*(W - WeA);
+  const resultB = 1 - W;
+  const newB = teamB.points + I*(resultB - WeB);
+
+  const deltaA = newA - teamA.points;
+  const deltaB = newB - teamB.points;
+
+  // تحديث القيم
+  teamA.points = newA; teamB.points = newB;
+  saveTeams(); renderAll();
+
+  document.getElementById('matchInfo').innerHTML = `التغيير: <strong>${teamA.name}</strong> ${deltaA.toFixed(2)} نقاط &nbsp; | &nbsp; <strong>${teamB.name}</strong> ${deltaB.toFixed(2)} نقاط`;
+}
+
+// ===== تصدير واستيراد CSV =====
+function exportCSV(){
+  if(teams.length===0){ alert('ما كاين حتى منتخب للتصدير'); return; }
+  const header = ['flag','name','points'];
+  const rows = teams.map(t=>[ (t.flag||''), t.name.replace(/"/g,'""'), t.points.toFixed(2) ]);
+  const csv = [header.join(',')].concat(rows.map(r=>r.map(c=>`"${c}"`).join(','))).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'fifa_teams.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+document.getElementById('exportCSV').onclick = exportCSV;
+
+document.getElementById('importCSVBtn').onclick = ()=> document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = function(e){
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(){ try{
+    const text = reader.result;
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    const data = lines.slice(1).map(l=>{
+      // بسيط: remove quotes then split by comma (assume no commas in name)
+      const cols = l.split(',').map(c=>c.replace(/^"|"$/g,''));
+      return {flag: cols[0], name: cols[1], points: parseFloat(cols[2])||1500 };
+    });
+    // أدخل مع الحفاظ على ids
+    data.forEach(d=>teams.push({id:Date.now()+Math.floor(Math.random()*1000), flag:d.flag, name:d.name, points:d.points}));
+    saveTeams(); renderAll(); alert('استيراد تم بنجاح');
+  }catch(err){ alert('فشل فالاستيراد'); }};
+  reader.readAsText(f,'utf-8');
+}
+
+// زر إفراغ الكل
+document.getElementById('resetBtn').onclick = ()=>{
+  if(!confirm('بغيت تفرّغ جميع المنتخبات؟')) return;
+  teams = []; saveTeams(); renderAll();
+}
+
+// تحديث سطر معلومات URL ووجود موقع
+function updateURLInfo(){ const info = document.getElementById('matchInfo'); /* keep existing text */ }
+
+// ===== تهيئة مبدئية =====
+(function init(){
+  loadTeams();
+  // إذا ماكانوش فرق نضيفو أمثلة
+  if(teams.length===0){
+    teams = [
+      {id:1, flag:'🇲🇦', name:'المغرب', points:1600},
+      {id:2, flag:'🇫🇷', name:'فرنسا', points:1750},
+      {id:3, flag:'🇧🇷', name:'البرازيل', points:1780},
+      {id:4, flag:'🇯🇵', name:'اليابان', points:1520}
+    ];
+    saveTeams();
+  }
+  renderAll();
+})();
+
+</script>
+</body>
+</html>
